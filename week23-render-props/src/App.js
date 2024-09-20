@@ -5,8 +5,13 @@ import { WeatherState } from './components/WeatherState';
 function App() {
   return (
     <>
-      <h1>Today's weather ...</h1>
-      <WeatherState />
+      <h1>Weather by country..</h1>
+      <div>
+        <h3>Korea</h3>
+        <WeatherState />
+        <h3>Japan</h3>
+        <WeatherState />
+      </div>
     </>
   );
 }
