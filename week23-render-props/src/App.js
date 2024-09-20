@@ -1,16 +1,15 @@
 import logo from './logo.svg';
 import './App.css';
-import { WeatherState } from './components/WeatherState';
+import { Korea } from './components/Korea';
+import { Japan } from './components/Japan';
 
 function App() {
   return (
     <>
       <h1>Weather by country..</h1>
       <div>
-        <h3>Korea</h3>
-        <WeatherState />
-        <h3>Japan</h3>
-        <WeatherState />
+          <Korea />
+          <Japan />
       </div>
     </>
   );
