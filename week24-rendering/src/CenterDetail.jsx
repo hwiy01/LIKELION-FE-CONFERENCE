@@ -32,20 +32,25 @@ export const CenterDetail = () => {
         getCenterLike(parseInt(centerId), likeData);
     }
 
-    useEffect(()=>{
+     // getCenterDetail 함수 한번만 생성
+    const getCenterDetail = useCallback(async()=>{
         var center_id = parseInt(centerId);
-        const getCenterDetail = async() => {
-            const result = await fetchCenterInfo(center_id);
-            setCenterInfo(result);
-            setLike(result.is_like);
-        }
-        const getCenterReview = async() => {
-            const result = await fetchCenterReview(center_id);
-            setCenterReview(result);
-        }
+        const result = await fetchCenterInfo(center_id);
+        setCenterInfo(result);
+        setLike(result.is_like);
+    },[])
+    
+    // getCenterReview 함수 한번만 생성
+    const getCenterReview = useCallback(async() => {
+        var center_id = parseInt(centerId);
+        const result = await fetchCenterReview(center_id);
+        setCenterReview(result);
+    },[])
+    
+    useEffect(()=>{
         getCenterDetail();
         getCenterReview();
-    },[])
+    },[centerId])
 
 if(centerInfo){
   return (
