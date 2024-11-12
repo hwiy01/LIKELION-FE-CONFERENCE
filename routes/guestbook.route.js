@@ -4,7 +4,7 @@ import { createEntry, deleteEntry, editEntry, getAllEntries, getEntryById } from
 const router = express.Router();
 //비슷한 라우트를 묶어서 라우터 객체로 사용
 
-// controller에서 실제 로직 실행
+// controller에서 실제 로직 실행//
 router.get('/', getAllEntries);
 
 router.get('/:id', getEntryById);
