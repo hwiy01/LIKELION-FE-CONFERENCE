@@ -1,0 +1,105 @@
+name: "PR Auto Merge on Schedule by gominzip"
+
+on:
+  schedule:
+    - cron: "0 12 * * 2"
+    - cron: "0 0 * * 3"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  merge:
+    name: "Auto Merge PRs"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: "Merge pull requests with 'Done' label"
+        uses: "actions/github-script@v6"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const query = `query($owner: String!, $name: String!) {
+              repository(owner: $owner, name: $name) {
+                pullRequests(last: 100, states: OPEN) {
+                  edges {
+                    node {
+                      number
+                      baseRefName
+                      mergeable
+                      labels(first: 10) {
+                        nodes {
+                          name
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }`;
+
+            const variables = {
+              owner: context.repo.owner,
+              name: context.repo.repo,
+            };
+
+            const { repository: { pullRequests: { edges: prs } } } = await github.graphql(query, variables);
+
+            for (const { node: pr } of prs) {
+              if (pr.baseRefName === "main") {
+                try {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    body: "자동 병합이 불가능합니다: main 브랜치로의 병합 시도는 허용되지 않습니다."
+                  });
+                } catch (e) {
+                  console.log(`PR #${pr.number}에 코멘트 추가 실패:`, e);
+                }
+                continue;
+              }
+
+              const hasDoneLabel = pr.labels.nodes.some(label => label.name.toLowerCase() === "done");
+              if (!hasDoneLabel) {
+                try {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    body: "자동 병합이 불가능합니다: 'Done' 라벨이 없습니다."
+                  });
+                } catch (e) {
+                  console.log(`PR #${pr.number}에 코멘트 추가 실패:`, e);
+                }
+                continue;
+              }
+
+              if (pr.mergeable === "CONFLICTING") {
+                try {
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: pr.number,
+                    body: "자동 병합이 불가능합니다: 충돌이 발생했습니다."
+                  });
+                } catch (e) {
+                  console.log(`PR #${pr.number}에 코멘트 추가 실패:`, e);
+                }
+                continue;
+              }
+
+              try {
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  merge_method: "merge"
+                });
+              } catch (e) {
+                console.log(`PR #${pr.number} 병합 실패:`, e);
+              }
+            }
