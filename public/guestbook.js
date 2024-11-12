@@ -1,4 +1,4 @@
-async function deleteEntry(id) {
+async function deleteEntry(id) {//
     if (confirm("정말로 삭제하시겠습니까?")) {
       try {
         const response = await fetch(`/guestbook/${id}`, {
